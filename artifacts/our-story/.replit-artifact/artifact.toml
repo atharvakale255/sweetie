@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Our Story"
+version = "1.0.0"
+id = "artifacts/our-story"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19644
+
+[services.development]
+run = "pnpm --filter @workspace/our-story run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/our-story", "run", "build" ]
+publicDir = "artifacts/our-story/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19644"
+BASE_PATH = "/"

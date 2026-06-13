@@ -76,7 +76,7 @@ export function Stats() {
             Official Results
           </p>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-primary mb-4">
-            Yin & Bhondu
+            Tanu & Atharva
           </h2>
           <p className="text-muted-foreground text-sm md:text-base">
             Compatibility Report · Feb 2026 – Present

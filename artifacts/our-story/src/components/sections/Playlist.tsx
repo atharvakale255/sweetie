@@ -22,7 +22,7 @@ const SONGS = [
     artist: "Vidhit Patankar",
     vibe: "How it feels when you're not around.",
     spotifyId: "5afuKIBOHvfwaIxRdjEIGJ",
-    startAt: 0, // CUSTOMIZE: change to the second where your lyric starts
+    startAt: 30,
   },
   {
     id: 2,

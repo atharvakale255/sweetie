@@ -2,12 +2,16 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Music2, Heart, Play, X } from "lucide-react";
 
-// CUSTOMIZE: Replace songs and add Spotify track IDs
+// CUSTOMIZE: Replace songs and add Spotify track IDs + optional start times
 //
 // HOW TO GET A SPOTIFY TRACK ID:
 //   1. Open Spotify → find the song → right-click → Share → Copy Song Link
 //   2. The link looks like: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT
 //   3. The part after /track/ is the ID — paste it into spotifyId below
+//
+// startAt: (optional) number of SECONDS into the song to start from.
+//   e.g. startAt: 62  →  starts at 1 minute 2 seconds
+//   Use this to drop straight into the lyric or moment that means something to you.
 //
 // Leave spotifyId as null to show the card without a play button.
 
@@ -18,6 +22,7 @@ const SONGS = [
     artist: "Vidhit Patankar",
     vibe: "How it feels when you're not around.",
     spotifyId: "5afuKIBOHvfwaIxRdjEIGJ",
+    startAt: 0, // CUSTOMIZE: change to the second where your lyric starts
   },
   {
     id: 2,
@@ -25,6 +30,7 @@ const SONGS = [
     artist: "Taylor Swift",
     vibe: "You feel like home.",
     spotifyId: null,
+    startAt: 0,
   },
   {
     id: 3,
@@ -32,6 +38,7 @@ const SONGS = [
     artist: "Harry Styles",
     vibe: "I'd walk through fire for you.",
     spotifyId: null,
+    startAt: 0,
   },
   {
     id: 4,
@@ -39,6 +46,7 @@ const SONGS = [
     artist: "Laufey",
     vibe: "Maybe it's always been you.",
     spotifyId: null,
+    startAt: 0,
   },
   {
     id: 5,
@@ -46,6 +54,7 @@ const SONGS = [
     artist: "Taylor Swift",
     vibe: "The first time we talked.",
     spotifyId: null,
+    startAt: 0,
   },
   {
     id: 6,
@@ -53,6 +62,7 @@ const SONGS = [
     artist: "Your artist",
     vibe: "// CUSTOMIZE: What does this song mean to you?",
     spotifyId: null,
+    startAt: 0,
   },
 ];
 
@@ -91,7 +101,7 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
           <div className="flex-1 overflow-hidden rounded-xl">
             <iframe
               key={song.spotifyId}
-              src={`https://open.spotify.com/embed/track/${song.spotifyId}?utm_source=generator&theme=0`}
+              src={`https://open.spotify.com/embed/track/${song.spotifyId}?utm_source=generator&theme=0&start=${song.startAt ?? 0}`}
               width="100%"
               height="80"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"

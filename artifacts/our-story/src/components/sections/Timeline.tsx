@@ -4,6 +4,7 @@ import firstTalkImg from "@assets/1st_talk_on_discord_1781349073697.PNG";
 import firstVcImg from "@assets/1st_vc_1781349073696.PNG";
 import whenIRealisedImg from "@assets/when_i_realised_1781349073696.PNG";
 import firstGameImg from "@assets/our_first_game_1781349073696.PNG";
+import rightNowImg from "@assets/already_couples_1781349045574.PNG";
 
 // CUSTOMIZE: Edit dates, titles, and descriptions here
 const TIMELINE_EVENTS = [
@@ -40,7 +41,7 @@ const TIMELINE_EVENTS = [
     date: "Today",
     title: "Right Now",
     description: "// TODO: Add something sweet about where you are right now.",
-    imageSrc: null,
+    imageSrc: rightNowImg,
   },
 ];
 

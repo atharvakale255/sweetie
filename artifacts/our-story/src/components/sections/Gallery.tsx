@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Image as ImageIcon, X } from "lucide-react";
-import alreadyCouplesImg from "@assets/already_couples_1781349045574.PNG";
-
 // CUSTOMIZE: Add your actual images here.
-// Example: import memory2 from "@assets/your-image.jpg"
-// Then set src: memory2 below.
+// Example: import memory1 from "@assets/your-image.jpg"
+// Then set src: memory1 below.
 const MEMORIES = [
-  { id: 1, title: "Already Couples 💕", src: alreadyCouplesImg },
+  { id: 1, title: "Memory #1", src: null },
   { id: 2, title: "Memory #2", src: null },
   { id: 3, title: "Memory #3", src: null },
   { id: 4, title: "Memory #4", src: null },

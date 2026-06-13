@@ -79,7 +79,7 @@ export function Stats() {
             Yin & Bhondu
           </h2>
           <p className="text-muted-foreground text-sm md:text-base">
-            Compatibility Report · Feb 2025 – Present
+            Compatibility Report · Feb 2026 – Present
           </p>
           <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/50 to-transparent mx-auto mt-6" />
         </motion.div>

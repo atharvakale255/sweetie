@@ -15,10 +15,10 @@ import { Music2, Heart, ExternalLink } from "lucide-react";
 const SONGS = [
   {
     id: 1,
-    title: "Falling",
-    artist: "Harry Styles",
+    title: "Hrudayat Vaje Something",
+    artist: "Vidhit Patankar",
     vibe: "How it feels when you're not around.",
-    spotifyId: null, // e.g. "4cOdK2wGLETKBW3PvgPWqT"
+    spotifyId: "5afuKIBOHvfwaIxRdjEIGJ",
   },
   {
     id: 2,

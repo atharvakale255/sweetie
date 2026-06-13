@@ -1,19 +1,19 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Music2, Heart, Play, X, Loader2 } from "lucide-react";
+import { Music2, Heart, Play, Pause, X, Loader2 } from "lucide-react";
 
-// CUSTOMIZE: Replace songs and add Spotify track IDs + optional start times
+// CUSTOMIZE: Replace songs with YouTube IDs + optional start times
 //
-// HOW TO GET A SPOTIFY TRACK ID:
-//   1. Open Spotify → find the song → right-click → Share → Copy Song Link
-//   2. The link looks like: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT
-//   3. The part after /track/ is the ID — paste it into spotifyId below
+// HOW TO GET A YOUTUBE VIDEO ID:
+//   1. Find the song on YouTube (official video, lyric video, etc.)
+//   2. The URL looks like: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+//   3. The part after v= is the ID — paste it into youtubeId below
 //
 // startAt: number of SECONDS into the song to start from.
 //   e.g. startAt: 75  →  starts at 1 min 15 sec
-//   Use this to drop straight into the lyric or moment that means something to you.
+//   Open YouTube, pause at the moment you want, note the timestamp.
 //
-// Leave spotifyId as null to show the card without a play button.
+// Leave youtubeId as null to show the card without a play button.
 
 const SONGS = [
   {
@@ -21,7 +21,7 @@ const SONGS = [
     title: "Hrudayat Vaje Something",
     artist: "Vidhit Patankar",
     vibe: "How it feels when you're not around.",
-    spotifyId: "5afuKIBOHvfwaIxRdjEIGJ",
+    youtubeId: "pAgnJDJN4VA", // CUSTOMIZE: replace with correct YouTube ID
     startAt: 30,
   },
   {
@@ -29,7 +29,7 @@ const SONGS = [
     title: "Lover",
     artist: "Taylor Swift",
     vibe: "You feel like home.",
-    spotifyId: null,
+    youtubeId: null,
     startAt: 0,
   },
   {
@@ -37,7 +37,7 @@ const SONGS = [
     title: "Adore You",
     artist: "Harry Styles",
     vibe: "I'd walk through fire for you.",
-    spotifyId: null,
+    youtubeId: null,
     startAt: 0,
   },
   {
@@ -45,7 +45,7 @@ const SONGS = [
     title: "From The Start",
     artist: "Laufey",
     vibe: "Maybe it's always been you.",
-    spotifyId: null,
+    youtubeId: null,
     startAt: 0,
   },
   {
@@ -53,7 +53,7 @@ const SONGS = [
     title: "Enchanted",
     artist: "Taylor Swift",
     vibe: "The first time we talked.",
-    spotifyId: null,
+    youtubeId: null,
     startAt: 0,
   },
   {
@@ -61,7 +61,7 @@ const SONGS = [
     title: "Add your song",
     artist: "Your artist",
     vibe: "What does this song mean to you?",
-    spotifyId: null,
+    youtubeId: null,
     startAt: 0,
   },
 ];
@@ -77,105 +77,136 @@ const CARD_GRADIENTS = [
 
 type Song = (typeof SONGS)[0];
 
-// Minimal types for the Spotify IFrame Controller API
-interface SpotifyIFrameAPI {
-  createController: (
-    el: HTMLElement,
-    options: { uri: string; height: number },
-    cb: (ctrl: SpotifyController) => void
-  ) => void;
-}
-interface PlaybackUpdateEvent {
-  data: { isPaused: boolean; position: number; duration: number };
-}
-interface SpotifyController {
-  addListener(event: "ready", cb: () => void): void;
-  addListener(event: "playback_update", cb: (e: PlaybackUpdateEvent) => void): void;
-  play: () => void;
-  seek: (seconds: number) => void;
+// ── YouTube IFrame API types ──────────────────────────────────────────────────
+interface YTPlayer {
+  playVideo: () => void;
+  pauseVideo: () => void;
+  seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+  getCurrentTime: () => number;
+  getDuration: () => number;
+  getPlayerState: () => number;
   destroy: () => void;
 }
-
+interface YTPlayerOptions {
+  videoId: string;
+  playerVars?: Record<string, number | string>;
+  events?: {
+    onReady?: (e: { target: YTPlayer }) => void;
+    onStateChange?: (e: { data: number }) => void;
+  };
+}
 declare global {
   interface Window {
-    onSpotifyIframeApiReady?: (api: SpotifyIFrameAPI) => void;
-    _spotifyIFrameAPI?: SpotifyIFrameAPI;
+    YT?: { Player: new (el: HTMLElement, opts: YTPlayerOptions) => YTPlayer; PlayerState: { PLAYING: number } };
+    onYouTubeIframeAPIReady?: () => void;
+    _ytApiReady?: boolean;
+    _ytApiCallbacks?: Array<() => void>;
   }
 }
 
-// Load the Spotify IFrame API once and cache it
-function loadSpotifyApi(): Promise<SpotifyIFrameAPI> {
-  if (window._spotifyIFrameAPI) {
-    return Promise.resolve(window._spotifyIFrameAPI);
-  }
+function loadYouTubeApi(): Promise<void> {
+  if (window._ytApiReady) return Promise.resolve();
   return new Promise((resolve) => {
-    const prev = window.onSpotifyIframeApiReady;
-    window.onSpotifyIframeApiReady = (api) => {
-      window._spotifyIFrameAPI = api;
-      if (prev) prev(api);
-      resolve(api);
-    };
-    if (!document.querySelector('script[src*="spotify.com/embed/iframe-api"]')) {
+    if (!window._ytApiCallbacks) window._ytApiCallbacks = [];
+    window._ytApiCallbacks.push(resolve);
+
+    if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        window._ytApiReady = true;
+        if (prev) prev();
+        window._ytApiCallbacks?.forEach((cb) => cb());
+        window._ytApiCallbacks = [];
+      };
       const script = document.createElement("script");
-      script.src = "https://open.spotify.com/embed/iframe-api/v1";
-      script.async = true;
+      script.src = "https://www.youtube.com/iframe_api";
       document.head.appendChild(script);
     }
   });
 }
 
+// ── Player bar ────────────────────────────────────────────────────────────────
 function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const controllerRef = useRef<SpotifyController | null>(null);
+  const iframeContainerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<YTPlayer | null>(null);
+  const rafRef = useRef<number>(0);
   const [loading, setLoading] = useState(true);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0); // 0–1
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const fmt = (s: number) =>
+    `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+  const startProgressLoop = useCallback(() => {
+    const tick = () => {
+      const p = playerRef.current;
+      if (!p) return;
+      const cur = p.getCurrentTime();
+      const dur = p.getDuration();
+      setCurrentTime(cur);
+      setDuration(dur);
+      setProgress(dur > 0 ? cur / dur : 0);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, []);
 
   useEffect(() => {
-    if (!containerRef.current || !song.spotifyId) return;
-    setLoading(true);
-
+    if (!iframeContainerRef.current || !song.youtubeId) return;
     let cancelled = false;
 
-    loadSpotifyApi().then((api) => {
-      if (cancelled || !containerRef.current) return;
+    loadYouTubeApi().then(() => {
+      if (cancelled || !iframeContainerRef.current || !window.YT) return;
 
-      api.createController(
-        containerRef.current,
-        { uri: `spotify:track:${song.spotifyId}`, height: 80 },
-        (controller) => {
-          if (cancelled) { controller.destroy(); return; }
-          controllerRef.current = controller;
-
-          // ready = iframe loaded; start playback
-          controller.addListener("ready", () => {
+      playerRef.current = new window.YT.Player(iframeContainerRef.current, {
+        videoId: song.youtubeId!,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          modestbranding: 1,
+          rel: 0,
+          start: song.startAt ?? 0,
+        },
+        events: {
+          onReady: (e) => {
             if (cancelled) return;
             setLoading(false);
-            controller.play();
-          });
-
-          // playback_update fires once the track is buffered and running;
-          // seek on the first real update so the track is ready to jump
-          if (song.startAt && song.startAt > 0) {
-            let seeked = false;
-            controller.addListener("playback_update", (e) => {
-              if (cancelled || seeked) return;
-              if (!e.data.isPaused && e.data.duration > 0) {
-                seeked = true;
-                controller.seek(song.startAt);
-              }
-            });
-          }
-        }
-      );
+            e.target.seekTo(song.startAt ?? 0, true);
+            e.target.playVideo();
+            startProgressLoop();
+          },
+          onStateChange: (e) => {
+            if (cancelled) return;
+            const PLAYING = window.YT?.PlayerState.PLAYING ?? 1;
+            setPlaying(e.data === PLAYING);
+          },
+        },
+      });
     });
 
     return () => {
       cancelled = true;
-      if (controllerRef.current) {
-        controllerRef.current.destroy();
-        controllerRef.current = null;
-      }
+      cancelAnimationFrame(rafRef.current);
+      playerRef.current?.destroy();
+      playerRef.current = null;
     };
-  }, [song]);
+  }, [song, startProgressLoop]);
+
+  const togglePlay = () => {
+    if (!playerRef.current) return;
+    if (playing) playerRef.current.pauseVideo();
+    else playerRef.current.playVideo();
+  };
+
+  const handleScrub = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!playerRef.current || duration === 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    playerRef.current.seekTo(ratio * duration, true);
+  };
 
   return (
     <motion.div
@@ -185,45 +216,72 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
       transition={{ type: "spring", stiffness: 300, damping: 32 }}
       className="fixed bottom-0 left-0 right-0 z-50"
     >
-      <div className="absolute inset-0 bg-background/85 backdrop-blur-xl border-t border-white/5" />
+      {/* Hidden YouTube iframe — must be in DOM and non-zero size for autoplay */}
+      <div className="absolute w-px h-px overflow-hidden opacity-0 pointer-events-none">
+        <div ref={iframeContainerRef} />
+      </div>
 
-      <div className="relative flex items-center gap-4 px-4 md:px-8 py-3 min-h-[88px]">
-        {/* Song label */}
-        <div className="hidden sm:flex flex-col min-w-[140px]">
-          <span className="font-serif text-sm text-foreground/90 truncate">{song.title}</span>
-          <span className="text-xs text-secondary/80 truncate">{song.artist}</span>
-          {song.startAt > 0 && (
-            <span className="text-xs text-primary/50 mt-0.5">
-              ↳ starts at {Math.floor(song.startAt / 60)}:{String(song.startAt % 60).padStart(2, "0")}
-            </span>
+      {/* Frosted backdrop */}
+      <div className="absolute inset-0 bg-background/90 backdrop-blur-xl border-t border-white/8" />
+
+      <div className="relative px-4 md:px-8 py-4">
+        {/* Top row: song info + controls + close */}
+        <div className="flex items-center gap-4 mb-3">
+          {/* Song info */}
+          <div className="flex-1 min-w-0">
+            <p className="font-serif text-sm text-foreground/90 truncate">{song.title}</p>
+            <p className="text-xs text-secondary/70 truncate">{song.artist}</p>
+          </div>
+
+          {/* Play / pause */}
+          {loading ? (
+            <Loader2 className="w-7 h-7 text-primary/60 animate-spin flex-shrink-0" />
+          ) : (
+            <motion.button
+              onClick={togglePlay}
+              whileTap={{ scale: 0.9 }}
+              className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(233,105,142,0.4)] flex-shrink-0"
+            >
+              {playing
+                ? <Pause className="w-4 h-4 text-white fill-white" />
+                : <Play className="w-4 h-4 text-white fill-white ml-0.5" />}
+            </motion.button>
           )}
+
+          {/* Close */}
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Spotify IFrame API mount point */}
-        <div className="flex-1 relative min-h-[80px]">
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="w-5 h-5 text-primary/60 animate-spin" />
-            </div>
-          )}
+        {/* Progress bar */}
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground/60 w-8 text-right tabular-nums">
+            {fmt(currentTime)}
+          </span>
           <div
-            ref={containerRef}
-            className={`w-full transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"}`}
-          />
+            className="flex-1 h-1 rounded-full bg-white/10 cursor-pointer relative overflow-hidden"
+            onClick={handleScrub}
+          >
+            <motion.div
+              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-secondary"
+              style={{ width: `${progress * 100}%` }}
+              transition={{ duration: 0.1 }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground/60 w-8 tabular-nums">
+            {fmt(duration)}
+          </span>
         </div>
-
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="flex-shrink-0 p-2 rounded-full bg-white/5 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
       </div>
     </motion.div>
   );
 }
 
+// ── Main section ──────────────────────────────────────────────────────────────
 export function Playlist() {
   const [activeSong, setActiveSong] = useState<Song | null>(null);
 
@@ -262,17 +320,14 @@ export function Playlist() {
                     ? "border-primary/40 shadow-[0_0_24px_rgba(233,105,142,0.15)]"
                     : "border-white/5 hover:border-primary/20"
                 }`}
-                style={{
-                  background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})`,
-                }}
+                style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }}
               >
-                {/* Top row: icon + play button */}
+                {/* Top row */}
                 <div className="flex items-center justify-between mb-5">
                   <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
                     <Music2 className="w-5 h-5 text-primary/70" />
                   </div>
-
-                  {song.spotifyId && (
+                  {song.youtubeId && (
                     <motion.button
                       onClick={() => setActiveSong(isPlaying ? null : song)}
                       whileTap={{ scale: 0.9 }}
@@ -288,31 +343,24 @@ export function Playlist() {
                 </div>
 
                 {/* Song info */}
-                <h3 className="font-serif text-xl text-foreground mb-1 leading-snug">
-                  {song.title}
-                </h3>
-                <p className="text-secondary text-sm font-medium tracking-wide mb-4">
-                  {song.artist}
-                </p>
+                <h3 className="font-serif text-xl text-foreground mb-1 leading-snug">{song.title}</h3>
+                <p className="text-secondary text-sm font-medium tracking-wide mb-4">{song.artist}</p>
 
                 <div className="h-px w-full bg-white/5 mb-4" />
 
-                {/* Vibe */}
                 <p className="text-muted-foreground text-sm font-light leading-relaxed italic flex items-start gap-2">
                   <Heart className="w-3.5 h-3.5 text-primary/50 mt-0.5 flex-shrink-0" />
                   {song.vibe}
                 </p>
 
-                {/* Timestamp hint */}
-                {song.spotifyId && song.startAt > 0 && (
+                {song.youtubeId && song.startAt > 0 && (
                   <p className="text-primary/30 text-xs mt-3 tracking-wide">
                     ♪ starts at {Math.floor(song.startAt / 60)}:{String(song.startAt % 60).padStart(2, "0")}
                   </p>
                 )}
-
-                {!song.spotifyId && (
+                {!song.youtubeId && (
                   <p className="text-muted-foreground/25 text-xs mt-4 tracking-widest uppercase">
-                    Add Spotify ID to enable play
+                    Add YouTube ID to enable play
                   </p>
                 )}
               </motion.div>
@@ -321,7 +369,7 @@ export function Playlist() {
         </div>
       </section>
 
-      {activeSong?.spotifyId && (
+      {activeSong?.youtubeId && (
         <PlayerBar key={activeSong.id} song={activeSong} onClose={() => setActiveSong(null)} />
       )}
     </>

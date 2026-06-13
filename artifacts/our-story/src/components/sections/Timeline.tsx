@@ -5,33 +5,33 @@ import { Camera } from "lucide-react";
 const TIMELINE_EVENTS = [
   {
     id: 1,
-    date: "Month Year",
-    title: "The First Message",
-    description: "// TODO: Add your memory here about how you first talked.",
+    date: "8th of Feb 2026",
+    title: "The actual meet",
+    description: "From meeting randomly in a game to this..",
   },
   {
     id: 2,
-    date: "Month Year",
+    date: "26th of May 2026",
     title: "The First VC",
-    description: "// TODO: Describe how nervous or excited you were for the first voice call.",
+    description: "The Hour which felt endless..",
   },
   {
     id: 3,
-    date: "Month Year",
+    date: "since 24th of May 2026",
     title: "When I Realized",
-    description: "// TODO: Add the moment you realized this was more than just a regular friendship.",
+    description: "And i knew i found the place where my soul can rest without worrying abt anything",
   },
   {
     id: 4,
-    date: "Month Year",
+    date: "8th of June 2026",
     title: "Our First Game Together",
-    description: "// TODO: Add a memory about a game you played or something you watched together.",
+    description: "When she carried me through a rage baiting game..",
   },
   {
     id: 5,
-    date: "Month Year",
+    date: "And so on..",
     title: "Today",
-    description: "// TODO: Add something sweet about where you are right now.",
+    description: "The fact we already are a couple when nobody asked out each other..",
   },
 ];
 

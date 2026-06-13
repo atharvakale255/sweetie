@@ -1,18 +1,18 @@
 import { motion } from "framer-motion";
 
 // CUSTOMIZE: Write your actual letter here
-const LETTER_CONTENT = `Dear [Name],
+const LETTER_CONTENT = `Dear Tanuu,
 
 I wanted to make something special for you. Something that could hold all these little moments and feelings that we've shared.
 
-When we first started talking, I had no idea how important you would become to me. You turned ordinary days into something I look forward to. You listen to me when I'm rambling, you stay up with me when neither of us can sleep, and you make the distance between us feel so much smaller.
+When we first started talking, I had no idea how important you would become to me. You turned ordinary days into something I look forward to. You listen to me when I'm rambling, you handle my depression and weird humor, and you make the distance between us feel so much smaller.
 
 This page is just a small token to say thank you. Thank you for being you. Thank you for being in my life.
 
-I don't know what the future holds, but I'm really glad you're in my present.
+I don't know what the future holds, but I'm really glad that you're in my present.
 
 Yours,
-[Your Name]`;
+Cutie/Sweetie/Bhondu/Hun`;
 
 export function Letter() {
   return (

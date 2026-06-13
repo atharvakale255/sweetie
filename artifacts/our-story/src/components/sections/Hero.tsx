@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 
 // CUSTOMIZE: Set initials, names, and the subtitle
-const INITIALS_LEFT = "Y";
-const INITIALS_RIGHT = "M";
+const INITIALS_LEFT = "T";
+const INITIALS_RIGHT = "A";
 const SUBTITLE = "From strangers on the internet, to something I never expected.";
 
 export function Hero() {

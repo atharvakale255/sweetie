@@ -21,7 +21,7 @@ const SONGS = [
     title: "Hrudayat Vaje Something",
     artist: "Vidhit Patankar",
     vibe: "How it feels when you're not around.",
-    youtubeId: "pAgnJDJN4VA", // CUSTOMIZE: replace with correct YouTube ID
+    youtubeId: "brBokVUqhyg", // CUSTOMIZE: replace with correct YouTube ID
     startAt: 30,
   },
   {
@@ -216,17 +216,19 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
       transition={{ type: "spring", stiffness: 300, damping: 32 }}
       className="fixed bottom-0 left-0 right-0 z-50"
     >
-      {/* Hidden YouTube iframe — must be in DOM and non-zero size for autoplay */}
-      <div className="absolute w-px h-px overflow-hidden opacity-0 pointer-events-none">
-        <div ref={iframeContainerRef} />
-      </div>
-
       {/* Frosted backdrop */}
       <div className="absolute inset-0 bg-background/90 backdrop-blur-xl border-t border-white/8" />
 
       <div className="relative px-4 md:px-8 py-4">
-        {/* Top row: song info + controls + close */}
+        {/* Top row: thumbnail + song info + controls + close */}
         <div className="flex items-center gap-4 mb-3">
+          {/* YouTube player — visible small thumbnail so autoplay isn't blocked */}
+          <div className="flex-shrink-0 w-[120px] h-[68px] rounded-xl overflow-hidden relative">
+            <div ref={iframeContainerRef} className="w-full h-full" />
+            {/* Dark overlay so it doesn't look jarring */}
+            <div className="absolute inset-0 bg-black/20 rounded-xl pointer-events-none" />
+          </div>
+        
           {/* Song info */}
           <div className="flex-1 min-w-0">
             <p className="font-serif text-sm text-foreground/90 truncate">{song.title}</p>

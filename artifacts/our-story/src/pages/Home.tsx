@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { LoadingScreen } from "@/components/sections/LoadingScreen";
 import { Hero } from "@/components/sections/Hero";
 import { Timeline } from "@/components/sections/Timeline";
-import { BucketList } from "@/components/sections/BucketList";
+import { LateNightThoughts } from "@/components/sections/LateNightThoughts";
 import { Playlist } from "@/components/sections/Playlist";
 import { FlipCards } from "@/components/sections/FlipCards";
 import { Stats } from "@/components/sections/Stats";
@@ -73,7 +73,7 @@ export default function Home() {
       <main className="flex flex-col">
         <Hero />
         <Timeline />
-        <BucketList />
+        <LateNightThoughts />
         <Playlist />
         <FlipCards />
         <Stats />

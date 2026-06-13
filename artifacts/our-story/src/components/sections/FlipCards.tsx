@@ -4,8 +4,8 @@ import { Heart } from "lucide-react";
 
 // CUSTOMIZE: Add your personal reasons here
 const REASONS = [
-  "The way you stay up late just to make sure I'm okay.",
-  "Your laugh — even through a screen, it gets me every time.",
+  "Your voice when you are genuinely happy :)",
+  "The way you tease me..",
   "How you remember the smallest details I mention.",
   "The comforting silence when we're just existing together in VC.",
   "Your music taste and how you share it with me.",

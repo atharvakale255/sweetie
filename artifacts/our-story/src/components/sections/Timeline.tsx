@@ -12,14 +12,14 @@ const TIMELINE_EVENTS = [
     id: 1,
     date: "08 Feb 2026",
     title: "The First Message",
-    description: "It started with you reading my name wrong — and somehow that was enough to break the ice forever.",
+    description: "It started with me making a bad joke..and somehow that was enough to break the ice forever.",
     imageSrc: firstTalkImg,
   },
   {
     id: 2,
     date: "26 May 2026",
     title: "The First VC",
-    description: "One hour. Just one hour — but it felt like we'd known each other for years.",
+    description: "One hour. Just one hour.. but it felt like we'd known each other for years.",
     imageSrc: firstVcImg,
   },
   {
@@ -40,7 +40,7 @@ const TIMELINE_EVENTS = [
     id: 5,
     date: "Today",
     title: "Right Now",
-    description: "// TODO: Add something sweet about where you are right now.",
+    description: "we were couples before we knew it",
     imageSrc: rightNowImg,
   },
 ];

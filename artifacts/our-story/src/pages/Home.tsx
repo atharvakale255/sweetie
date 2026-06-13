@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { LoadingScreen } from "@/components/sections/LoadingScreen";
 import { Hero } from "@/components/sections/Hero";
 import { Timeline } from "@/components/sections/Timeline";
-import { Gallery } from "@/components/sections/Gallery";
+import { BucketList } from "@/components/sections/BucketList";
+import { Playlist } from "@/components/sections/Playlist";
 import { FlipCards } from "@/components/sections/FlipCards";
 import { Stats } from "@/components/sections/Stats";
 import { HiddenStars } from "@/components/sections/HiddenStars";
@@ -10,12 +11,13 @@ import { Letter } from "@/components/sections/Letter";
 import { FinalQuestion } from "@/components/sections/FinalQuestion";
 
 const SECTIONS = [
-  { id: "hero", label: "Start" },
+  { id: "hero",     label: "Start" },
   { id: "timeline", label: "Story" },
-  { id: "gallery", label: "Gallery" },
-  { id: "reasons", label: "Reasons" },
-  { id: "stats", label: "Stats" },
-  { id: "letter", label: "Letter" },
+  { id: "gallery",  label: "List" },
+  { id: "playlist", label: "Songs" },
+  { id: "reasons",  label: "Reasons" },
+  { id: "stats",    label: "Stats" },
+  { id: "letter",   label: "Letter" },
   { id: "question", label: "?" },
 ];
 
@@ -23,16 +25,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("hero");
 
-  // Track active section for side nav
   useEffect(() => {
     if (isLoading) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
         });
       },
       { threshold: 0.3 }
@@ -60,9 +59,10 @@ export default function Home() {
           <a
             key={section.id}
             href={`#${section.id}`}
+            data-testid={`nav-dot-${section.id}`}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              activeSection === section.id 
-                ? "bg-primary scale-150 shadow-[0_0_10px_rgba(233,105,142,0.8)]" 
+              activeSection === section.id
+                ? "bg-primary scale-150 shadow-[0_0_10px_rgba(233,105,142,0.8)]"
                 : "bg-white/20 hover:bg-white/50"
             }`}
             aria-label={`Scroll to ${section.label}`}
@@ -73,7 +73,8 @@ export default function Home() {
       <main className="flex flex-col">
         <Hero />
         <Timeline />
-        <Gallery />
+        <BucketList />
+        <Playlist />
         <FlipCards />
         <Stats />
         <Letter />

@@ -9,7 +9,7 @@ const THOUGHTS = [
   "You have no idea how often I almost said something more than what I typed.",
   "I replay certain moments of our calls more than I'd ever admit.",
   "There are voice messages I recorded and deleted because I didn't know how to say it.",
-  "I hope wherever you are right now, you're warm.",
+  "I hope wherever you are right now, you're happy.",
   "Some songs came on and I thought — this is exactly what this feels like.",
 ];
 

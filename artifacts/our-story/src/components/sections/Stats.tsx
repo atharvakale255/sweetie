@@ -1,15 +1,59 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Clock, Smile, MessageCircle, Moon, Phone, CalendarHeart } from "lucide-react";
+import { Clock, Smile, Moon, Star, Heart, Repeat2 } from "lucide-react";
 
-// CUSTOMIZE: Change these values to match your real stats
+// CUSTOMIZE: Change labels and display values to match your story.
+// - set animate: true + target: N  →  counts up from 0 to N
+// - set animate: false             →  displays the value as-is (text, symbols, %)
 const STATS = [
-  { id: "days",   label: "Days Since We Met",     target: 490,  icon: CalendarHeart },
-  { id: "hours",  label: "Hours Spent Talking",   target: 720,  icon: Clock },
-  { id: "late",   label: "Times Up Way Too Late", target: 200,  icon: Moon },
-  { id: "laughs", label: "Times We Laughed",      target: 1847, icon: Smile },
-  { id: "jokes",  label: "Inside Jokes",          target: 63,   icon: MessageCircle },
-  { id: "calls",  label: "Voice Calls",           target: 31,   icon: Phone },
+  {
+    id: "boring",
+    display: "0",
+    label: "Times I've been bored talking to you",
+    animate: true,
+    target: 0,
+    icon: Smile,
+  },
+  {
+    id: "days",
+    display: "490",
+    label: "Days and still not enough",
+    animate: true,
+    target: 490,
+    icon: Clock,
+  },
+  {
+    id: "timezone",
+    display: "3 AM",
+    label: "Our unofficial timezone",
+    animate: false,
+    target: 0,
+    icon: Moon,
+  },
+  {
+    id: "infinity",
+    display: "∞",
+    label: "Reasons I keep coming back",
+    animate: false,
+    target: 0,
+    icon: Star,
+  },
+  {
+    id: "one",
+    display: "1",
+    label: "Person who gets me like this",
+    animate: true,
+    target: 1,
+    icon: Heart,
+  },
+  {
+    id: "hundred",
+    display: "100%",
+    label: "Chance I'd choose you again",
+    animate: false,
+    target: 0,
+    icon: Repeat2,
+  },
 ];
 
 function AnimatedCounter({ target }: { target: number }) {
@@ -19,6 +63,7 @@ function AnimatedCounter({ target }: { target: number }) {
 
   useEffect(() => {
     if (!isInView) return;
+    if (target === 0) { setCount(0); return; }
     let start = 0;
     const duration = 2000;
     const increment = target / (duration / 16);
@@ -35,12 +80,26 @@ function AnimatedCounter({ target }: { target: number }) {
   }, [target, isInView]);
 
   return (
-    <span
-      ref={ref}
-      className="text-4xl md:text-5xl lg:text-6xl font-serif text-secondary"
-    >
+    <span ref={ref} className="text-4xl md:text-5xl lg:text-6xl font-serif text-secondary">
       {count.toLocaleString()}
     </span>
+  );
+}
+
+function StaticDisplay({ value }: { value: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  return (
+    <motion.span
+      ref={ref}
+      initial={{ opacity: 0, scale: 0.7 }}
+      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+      transition={{ type: "spring", stiffness: 200, damping: 18 }}
+      className="text-4xl md:text-5xl lg:text-6xl font-serif text-secondary"
+    >
+      {value}
+    </motion.span>
   );
 }
 
@@ -69,7 +128,6 @@ export function Stats() {
             return (
               <motion.div
                 key={stat.id}
-                data-testid={`stat-${stat.id}`}
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -79,7 +137,12 @@ export function Stats() {
                 <div className="p-4 rounded-full bg-secondary/10 text-secondary mb-1">
                   <Icon className="w-6 h-6 md:w-7 md:h-7" />
                 </div>
-                <AnimatedCounter target={stat.target} />
+
+                {stat.animate
+                  ? <AnimatedCounter target={stat.target} />
+                  : <StaticDisplay value={stat.display} />
+                }
+
                 <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-widest leading-relaxed">
                   {stat.label}
                 </span>

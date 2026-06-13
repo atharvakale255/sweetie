@@ -26,19 +26,19 @@ const SONGS = [
   },
   {
     id: 2,
-    title: "Lover",
-    artist: "Taylor Swift",
-    vibe: "You feel like home.",
-    youtubeId: null,
-    startAt: 0,
+    title: "Palat",
+    artist: "Arijit Singh",
+    vibe: "Our Future Perfect Date...",
+    youtubeId: "2ELxiL5OmkQ",
+    startAt: 100,
   },
   {
     id: 3,
-    title: "Adore You",
-    artist: "Harry Styles",
-    vibe: "I'd walk through fire for you.",
-    youtubeId: null,
-    startAt: 0,
+    title: "Sanam",
+    artist: "Taarif Karoon",
+    vibe: "You and just u being pretty....",
+    youtubeId: null, // CUSTOMIZE: add the correct YouTube ID
+    startAt: 16,
   },
   {
     id: 4,
@@ -131,6 +131,7 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
   const playerRef = useRef<YTPlayer | null>(null);
   const rafRef = useRef<number>(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // 0–1
   const [currentTime, setCurrentTime] = useState(0);
@@ -157,6 +158,11 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
     if (!iframeContainerRef.current || !song.youtubeId) return;
     let cancelled = false;
 
+    // 8-second timeout — if onReady never fires, show error instead of spinning
+    const timeout = setTimeout(() => {
+      if (!cancelled) { setLoading(false); setLoadError(true); }
+    }, 8000);
+
     loadYouTubeApi().then(() => {
       if (cancelled || !iframeContainerRef.current || !window.YT) return;
 
@@ -173,6 +179,7 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
         events: {
           onReady: (e) => {
             if (cancelled) return;
+            clearTimeout(timeout);
             setLoading(false);
             e.target.seekTo(song.startAt ?? 0, true);
             e.target.playVideo();
@@ -189,6 +196,7 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
 
     return () => {
       cancelled = true;
+      clearTimeout(timeout);
       cancelAnimationFrame(rafRef.current);
       playerRef.current?.destroy();
       playerRef.current = null;
@@ -238,6 +246,10 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
           {/* Play / pause */}
           {loading ? (
             <Loader2 className="w-7 h-7 text-primary/60 animate-spin flex-shrink-0" />
+          ) : loadError ? (
+            <span className="text-xs text-muted-foreground/50 flex-shrink-0 max-w-[100px] text-center leading-tight">
+              Can't play — check YouTube ID
+            </span>
           ) : (
             <motion.button
               onClick={togglePlay}

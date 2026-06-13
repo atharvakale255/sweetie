@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Image as ImageIcon, X } from "lucide-react";
+import alreadyCouplesImg from "@assets/already_couples_1781349045574.PNG";
 
 // CUSTOMIZE: Add your actual images here.
-// Example: import memory1 from "@assets/memory1.jpg"
-// Then set src: memory1 below.
+// Example: import memory2 from "@assets/your-image.jpg"
+// Then set src: memory2 below.
 const MEMORIES = [
-  { id: 1, title: "Memory #1", src: null },
+  { id: 1, title: "Already Couples 💕", src: alreadyCouplesImg },
   { id: 2, title: "Memory #2", src: null },
   { id: 3, title: "Memory #3", src: null },
   { id: 4, title: "Memory #4", src: null },
@@ -83,7 +84,7 @@ export function Gallery() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.85, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="relative w-full max-w-4xl aspect-[4/3] bg-card rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl"
+              className="relative w-full max-w-4xl bg-card rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -98,14 +99,12 @@ export function Gallery() {
                 <img
                   src={selected.src}
                   alt={selected.title}
-                  className="w-full h-full object-contain"
+                  className="w-full h-auto object-contain max-h-[85vh]"
                 />
               ) : (
-                <div className="flex flex-col items-center text-muted-foreground">
+                <div className="flex flex-col items-center text-muted-foreground p-16">
                   <ImageIcon className="w-20 h-20 mb-4 opacity-20" />
-                  <p className="font-serif text-lg">
-                    Placeholder for {selected?.title}
-                  </p>
+                  <p className="font-serif text-lg">{selected?.title}</p>
                   <p className="text-sm opacity-40 mt-2">
                     // CUSTOMIZE: Replace with actual image
                   </p>

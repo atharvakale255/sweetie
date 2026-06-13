@@ -1,37 +1,46 @@
 import { motion } from "framer-motion";
 import { Camera } from "lucide-react";
+import firstTalkImg from "@assets/1st_talk_on_discord_1781349073697.PNG";
+import firstVcImg from "@assets/1st_vc_1781349073696.PNG";
+import whenIRealisedImg from "@assets/when_i_realised_1781349073696.PNG";
+import firstGameImg from "@assets/our_first_game_1781349073696.PNG";
 
-// CUSTOMIZE: Add your actual timeline events here
+// CUSTOMIZE: Edit dates, titles, and descriptions here
 const TIMELINE_EVENTS = [
   {
     id: 1,
-    date: "8th of Feb 2026",
-    title: "The actual meet",
-    description: "From meeting randomly in a game to this..",
+    date: "08 Feb 2026",
+    title: "The First Message",
+    description: "It started with you reading my name wrong — and somehow that was enough to break the ice forever.",
+    imageSrc: firstTalkImg,
   },
   {
     id: 2,
-    date: "26th of May 2026",
+    date: "26 May 2026",
     title: "The First VC",
-    description: "The Hour which felt endless..",
+    description: "One hour. Just one hour — but it felt like we'd known each other for years.",
+    imageSrc: firstVcImg,
   },
   {
     id: 3,
-    date: "since 24th of May 2026",
+    date: "26–29 May 2026",
     title: "When I Realized",
-    description: "And i knew i found the place where my soul can rest without worrying abt anything",
+    description: "Every morning started with 'Hello cutie' and every night ended with you checking in. That's when I knew.",
+    imageSrc: whenIRealisedImg,
   },
   {
     id: 4,
-    date: "8th of June 2026",
+    date: "08 Jun 2026",
     title: "Our First Game Together",
-    description: "When she carried me through a rage baiting game..",
+    description: "\"Boring to play alone\" — and just like that, we had our first shared adventure.",
+    imageSrc: firstGameImg,
   },
   {
     id: 5,
-    date: "And so on..",
-    title: "Today",
-    description: "The fact we already are a couple when nobody asked out each other..",
+    date: "Today",
+    title: "Right Now",
+    description: "// TODO: Add something sweet about where you are right now.",
+    imageSrc: null,
   },
 ];
 
@@ -71,7 +80,7 @@ export function Timeline() {
               <div className="md:hidden absolute left-[5px] top-6 w-3 h-3 rounded-full bg-background border-2 border-primary z-10" />
 
               {/* LEFT SLOT — even: card, odd: empty */}
-              <div className={`hidden md:block md:w-[46%] ${isEven ? "" : ""}`}>
+              <div className="hidden md:block md:w-[46%]">
                 {isEven ? (
                   <motion.div
                     initial={{ opacity: 0, x: -60 }}
@@ -138,11 +147,22 @@ function EventCard({
       <p className="text-muted-foreground font-light mb-5 leading-relaxed">
         {event.description}
       </p>
-      {/* Image placeholder */}
-      <div className="w-full h-44 lg:h-52 rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-muted-foreground/40 bg-black/20 hover:border-primary/20 transition-colors">
-        <Camera className="w-8 h-8 mb-2 opacity-50" />
-        <span className="text-xs">Add your screenshot here</span>
-      </div>
+
+      {/* Image */}
+      {event.imageSrc ? (
+        <div className="w-full rounded-xl overflow-hidden border border-white/5">
+          <img
+            src={event.imageSrc}
+            alt={event.title}
+            className="w-full h-auto object-cover"
+          />
+        </div>
+      ) : (
+        <div className="w-full h-44 lg:h-52 rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-muted-foreground/40 bg-black/20 hover:border-primary/20 transition-colors">
+          <Camera className="w-8 h-8 mb-2 opacity-50" />
+          <span className="text-xs">Add your screenshot here</span>
+        </div>
+      )}
     </div>
   );
 }

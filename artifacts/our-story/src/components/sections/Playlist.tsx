@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Music2, Heart, Play, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { Music2, Heart, Play, X, Loader2 } from "lucide-react";
 
 // CUSTOMIZE: Replace songs and add Spotify track IDs + optional start times
 //
@@ -9,8 +9,8 @@ import { Music2, Heart, Play, X } from "lucide-react";
 //   2. The link looks like: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT
 //   3. The part after /track/ is the ID — paste it into spotifyId below
 //
-// startAt: (optional) number of SECONDS into the song to start from.
-//   e.g. startAt: 62  →  starts at 1 minute 2 seconds
+// startAt: number of SECONDS into the song to start from.
+//   e.g. startAt: 75  →  starts at 1 min 15 sec
 //   Use this to drop straight into the lyric or moment that means something to you.
 //
 // Leave spotifyId as null to show the card without a play button.
@@ -60,7 +60,7 @@ const SONGS = [
     id: 6,
     title: "Add your song",
     artist: "Your artist",
-    vibe: "// CUSTOMIZE: What does this song mean to you?",
+    vibe: "What does this song mean to you?",
     spotifyId: null,
     startAt: 0,
   },
@@ -77,51 +77,138 @@ const CARD_GRADIENTS = [
 
 type Song = (typeof SONGS)[0];
 
+// Minimal types for the Spotify IFrame Controller API
+interface SpotifyIFrameAPI {
+  createController: (
+    el: HTMLElement,
+    options: { uri: string; height: number },
+    cb: (ctrl: SpotifyController) => void
+  ) => void;
+}
+interface SpotifyController {
+  addListener: (event: string, cb: () => void) => void;
+  play: () => void;
+  seek: (seconds: number) => void;
+  destroy: () => void;
+}
+
+declare global {
+  interface Window {
+    onSpotifyIframeApiReady?: (api: SpotifyIFrameAPI) => void;
+    _spotifyIFrameAPI?: SpotifyIFrameAPI;
+  }
+}
+
+// Load the Spotify IFrame API once and cache it
+function loadSpotifyApi(): Promise<SpotifyIFrameAPI> {
+  if (window._spotifyIFrameAPI) {
+    return Promise.resolve(window._spotifyIFrameAPI);
+  }
+  return new Promise((resolve) => {
+    const prev = window.onSpotifyIframeApiReady;
+    window.onSpotifyIframeApiReady = (api) => {
+      window._spotifyIFrameAPI = api;
+      if (prev) prev(api);
+      resolve(api);
+    };
+    if (!document.querySelector('script[src*="spotify.com/embed/iframe-api"]')) {
+      const script = document.createElement("script");
+      script.src = "https://open.spotify.com/embed/iframe-api/v1";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  });
+}
+
 function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const controllerRef = useRef<SpotifyController | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!containerRef.current || !song.spotifyId) return;
+    setLoading(true);
+
+    let cancelled = false;
+
+    loadSpotifyApi().then((api) => {
+      if (cancelled || !containerRef.current) return;
+
+      // Clear any previous embed the API may have injected
+      containerRef.current.innerHTML = "";
+
+      api.createController(
+        containerRef.current,
+        { uri: `spotify:track:${song.spotifyId}`, height: 80 },
+        (controller) => {
+          if (cancelled) { controller.destroy(); return; }
+          controllerRef.current = controller;
+
+          controller.addListener("ready", () => {
+            if (cancelled) return;
+            setLoading(false);
+            if (song.startAt && song.startAt > 0) {
+              controller.seek(song.startAt);
+            }
+            controller.play();
+          });
+        }
+      );
+    });
+
+    return () => {
+      cancelled = true;
+      if (controllerRef.current) {
+        controllerRef.current.destroy();
+        controllerRef.current = null;
+      }
+    };
+  }, [song]);
+
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ y: 120, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 120, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 32 }}
-        className="fixed bottom-0 left-0 right-0 z-50"
-      >
-        {/* Blur backdrop */}
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-t border-white/5" />
+    <motion.div
+      initial={{ y: 120, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 120, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 32 }}
+      className="fixed bottom-0 left-0 right-0 z-50"
+    >
+      <div className="absolute inset-0 bg-background/85 backdrop-blur-xl border-t border-white/5" />
 
-        <div className="relative flex items-center gap-4 px-4 md:px-8 py-3">
-          {/* Song label */}
-          <div className="hidden sm:flex flex-col min-w-[140px]">
-            <span className="font-serif text-sm text-foreground/90 truncate">{song.title}</span>
-            <span className="text-xs text-secondary/80 truncate">{song.artist}</span>
-          </div>
-
-          {/* Spotify embed — takes up remaining space */}
-          <div className="flex-1 overflow-hidden rounded-xl">
-            <iframe
-              key={song.spotifyId}
-              src={`https://open.spotify.com/embed/track/${song.spotifyId}?utm_source=generator&theme=0&start=${song.startAt ?? 0}`}
-              width="100%"
-              height="80"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              className="border-0 block rounded-xl"
-              title={song.title}
-            />
-          </div>
-
-          {/* Close */}
-          <button
-            data-testid="player-bar-close"
-            onClick={onClose}
-            className="flex-shrink-0 p-2 rounded-full bg-white/5 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+      <div className="relative flex items-center gap-4 px-4 md:px-8 py-3 min-h-[88px]">
+        {/* Song label */}
+        <div className="hidden sm:flex flex-col min-w-[140px]">
+          <span className="font-serif text-sm text-foreground/90 truncate">{song.title}</span>
+          <span className="text-xs text-secondary/80 truncate">{song.artist}</span>
+          {song.startAt > 0 && (
+            <span className="text-xs text-primary/50 mt-0.5">
+              ↳ starts at {Math.floor(song.startAt / 60)}:{String(song.startAt % 60).padStart(2, "0")}
+            </span>
+          )}
         </div>
-      </motion.div>
-    </AnimatePresence>
+
+        {/* Spotify IFrame API mount point */}
+        <div className="flex-1 relative min-h-[80px]">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loader2 className="w-5 h-5 text-primary/60 animate-spin" />
+            </div>
+          )}
+          <div
+            ref={containerRef}
+            className={`w-full transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"}`}
+          />
+        </div>
+
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 p-2 rounded-full bg-white/5 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </motion.div>
   );
 }
 
@@ -153,7 +240,6 @@ export function Playlist() {
             return (
               <motion.div
                 key={song.id}
-                data-testid={`song-card-${song.id}`}
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -176,10 +262,7 @@ export function Playlist() {
 
                   {song.spotifyId && (
                     <motion.button
-                      data-testid={`play-song-${song.id}`}
-                      onClick={() =>
-                        setActiveSong(isPlaying ? null : song)
-                      }
+                      onClick={() => setActiveSong(isPlaying ? null : song)}
                       whileTap={{ scale: 0.9 }}
                       className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
                         isPlaying
@@ -208,7 +291,13 @@ export function Playlist() {
                   {song.vibe}
                 </p>
 
-                {/* No ID hint */}
+                {/* Timestamp hint */}
+                {song.spotifyId && song.startAt > 0 && (
+                  <p className="text-primary/30 text-xs mt-3 tracking-wide">
+                    ♪ starts at {Math.floor(song.startAt / 60)}:{String(song.startAt % 60).padStart(2, "0")}
+                  </p>
+                )}
+
                 {!song.spotifyId && (
                   <p className="text-muted-foreground/25 text-xs mt-4 tracking-widest uppercase">
                     Add Spotify ID to enable play
@@ -220,7 +309,6 @@ export function Playlist() {
         </div>
       </section>
 
-      {/* Floating player bar */}
       {activeSong?.spotifyId && (
         <PlayerBar song={activeSong} onClose={() => setActiveSong(null)} />
       )}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Music2, Heart, ExternalLink } from "lucide-react";
+import { Music2, Heart } from "lucide-react";
 
 // CUSTOMIZE: Replace songs and add Spotify track IDs
 //
@@ -8,9 +8,9 @@ import { Music2, Heart, ExternalLink } from "lucide-react";
 //   1. Open Spotify and find the song
 //   2. Right-click the song → Share → Copy Song Link
 //   3. The link looks like: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT
-//   4. The part after /track/ is the ID — paste it into spotifyId below
+//   4. The part after /track/ is the ID — paste it as spotifyId below
 //
-// Leave spotifyId as null to show the card without a player.
+// Leave spotifyId as null to show a placeholder card.
 
 const SONGS = [
   {
@@ -57,35 +57,69 @@ const SONGS = [
   },
 ];
 
-// CUSTOMIZE: Gradient pairs for each card when no Spotify embed is loaded
-const CARD_GRADIENTS = [
-  ["rgba(233,105,142,0.12)", "rgba(233,105,142,0.03)"],
-  ["rgba(242,166,90,0.12)",  "rgba(242,166,90,0.03)"],
-  ["rgba(168,130,210,0.12)", "rgba(168,130,210,0.03)"],
-  ["rgba(100,180,210,0.12)", "rgba(100,180,210,0.03)"],
-  ["rgba(233,105,142,0.10)", "rgba(242,166,90,0.04)"],
-  ["rgba(242,166,90,0.10)",  "rgba(233,105,142,0.04)"],
-];
-
-function SpotifyEmbed({ trackId }: { trackId: string }) {
+function SpotifyCard({
+  song,
+  index,
+}: {
+  song: (typeof SONGS)[0];
+  index: number;
+}) {
   const [loaded, setLoaded] = useState(false);
+
   return (
-    <div className="relative mt-4 rounded-xl overflow-hidden">
-      {/* Skeleton while loading */}
-      {!loaded && (
-        <div className="h-[80px] w-full bg-black/40 animate-pulse rounded-xl" />
+    <motion.div
+      data-testid={`song-card-${song.id}`}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className="rounded-2xl border border-white/5 hover:border-primary/20 transition-all duration-300 overflow-hidden bg-card/50"
+    >
+      {/* Vibe line — always shown at top */}
+      <div className="px-5 pt-5 pb-4 flex items-start gap-2">
+        <Heart className="w-3.5 h-3.5 text-primary/50 mt-1 flex-shrink-0" />
+        <p className="text-muted-foreground text-sm font-light leading-relaxed italic">
+          {song.vibe}
+        </p>
+      </div>
+
+      {/* Spotify embed when ID is set */}
+      {song.spotifyId ? (
+        <div className="relative px-0 pb-0">
+          {!loaded && (
+            <div className="h-[152px] w-full bg-black/40 animate-pulse" />
+          )}
+          <iframe
+            src={`https://open.spotify.com/embed/track/${song.spotifyId}?utm_source=generator&theme=0`}
+            width="100%"
+            height="152"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            onLoad={() => setLoaded(true)}
+            className={`border-0 block transition-opacity duration-500 ${
+              loaded ? "opacity-100" : "opacity-0 absolute inset-0"
+            }`}
+            title={song.title}
+          />
+        </div>
+      ) : (
+        /* Placeholder card when no ID yet */
+        <div className="px-5 pb-5">
+          <div className="h-px w-full bg-white/5 mb-4" />
+          <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-4 flex flex-col items-start gap-1">
+            <div className="flex items-center gap-2 mb-1">
+              <Music2 className="w-4 h-4 text-primary/40" />
+              <span className="font-serif text-base text-foreground/80">{song.title}</span>
+            </div>
+            <span className="text-secondary/70 text-xs tracking-wide">{song.artist}</span>
+            <span className="text-muted-foreground/30 text-xs mt-2 tracking-widest uppercase">
+              Add Spotify ID to enable player
+            </span>
+          </div>
+        </div>
       )}
-      <iframe
-        src={`https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`}
-        width="100%"
-        height="80"
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        loading="lazy"
-        onLoad={() => setLoaded(true)}
-        className={`rounded-xl border-0 transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0 absolute inset-0"}`}
-        title={`Spotify player`}
-      />
-    </div>
+    </motion.div>
   );
 }
 
@@ -107,80 +141,10 @@ export function Playlist() {
       </motion.div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {SONGS.map((song, index) => {
-          const [gradFrom, gradTo] = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
-          return (
-            <motion.div
-              key={song.id}
-              data-testid={`song-card-${song.id}`}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              className="p-6 rounded-2xl border border-white/5 hover:border-primary/20 transition-all duration-300"
-              style={{
-                background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})`,
-              }}
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between gap-2 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0">
-                  <Music2 className="w-5 h-5 text-primary/70" />
-                </div>
-                {song.spotifyId && (
-                  <a
-                    href={`https://open.spotify.com/track/${song.spotifyId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground/40 hover:text-primary/60 transition-colors"
-                    aria-label="Open in Spotify"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
-              </div>
-
-              {/* Song info */}
-              <h3 className="font-serif text-xl text-foreground mb-1 leading-snug">
-                {song.title}
-              </h3>
-              <p className="text-secondary text-sm font-medium tracking-wide mb-4">
-                {song.artist}
-              </p>
-
-              <div className="h-px w-full bg-white/5 mb-4" />
-
-              {/* Vibe line */}
-              <p className="text-muted-foreground text-sm font-light leading-relaxed italic flex items-start gap-2">
-                <Heart className="w-3.5 h-3.5 text-primary/50 mt-0.5 flex-shrink-0" />
-                {song.vibe}
-              </p>
-
-              {/* Spotify embed — only if trackId provided */}
-              {song.spotifyId && <SpotifyEmbed trackId={song.spotifyId} />}
-
-              {/* Placeholder when no ID yet */}
-              {!song.spotifyId && (
-                <div className="mt-4 h-[80px] rounded-xl border border-dashed border-white/10 flex items-center justify-center gap-2 text-muted-foreground/30">
-                  <Music2 className="w-4 h-4" />
-                  <span className="text-xs tracking-wider uppercase">Add Spotify ID</span>
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
+        {SONGS.map((song, index) => (
+          <SpotifyCard key={song.id} song={song} index={index} />
+        ))}
       </div>
-
-      {/* How-to hint */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        className="text-center text-xs text-muted-foreground/30 mt-10 tracking-wide"
-      >
-        To enable players: right-click any song on Spotify → Share → Copy Song Link → paste the ID into Playlist.tsx
-      </motion.p>
     </section>
   );
 }

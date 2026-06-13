@@ -85,8 +85,12 @@ interface SpotifyIFrameAPI {
     cb: (ctrl: SpotifyController) => void
   ) => void;
 }
+interface PlaybackUpdateEvent {
+  data: { isPaused: boolean; position: number; duration: number };
+}
 interface SpotifyController {
-  addListener: (event: string, cb: () => void) => void;
+  addListener(event: "ready", cb: () => void): void;
+  addListener(event: "playback_update", cb: (e: PlaybackUpdateEvent) => void): void;
   play: () => void;
   seek: (seconds: number) => void;
   destroy: () => void;
@@ -134,9 +138,6 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
     loadSpotifyApi().then((api) => {
       if (cancelled || !containerRef.current) return;
 
-      // Clear any previous embed the API may have injected
-      containerRef.current.innerHTML = "";
-
       api.createController(
         containerRef.current,
         { uri: `spotify:track:${song.spotifyId}`, height: 80 },
@@ -144,14 +145,25 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
           if (cancelled) { controller.destroy(); return; }
           controllerRef.current = controller;
 
+          // ready = iframe loaded; start playback
           controller.addListener("ready", () => {
             if (cancelled) return;
             setLoading(false);
-            if (song.startAt && song.startAt > 0) {
-              controller.seek(song.startAt);
-            }
             controller.play();
           });
+
+          // playback_update fires once the track is buffered and running;
+          // seek on the first real update so the track is ready to jump
+          if (song.startAt && song.startAt > 0) {
+            let seeked = false;
+            controller.addListener("playback_update", (e) => {
+              if (cancelled || seeked) return;
+              if (!e.data.isPaused && e.data.duration > 0) {
+                seeked = true;
+                controller.seek(song.startAt);
+              }
+            });
+          }
         }
       );
     });
@@ -310,7 +322,7 @@ export function Playlist() {
       </section>
 
       {activeSong?.spotifyId && (
-        <PlayerBar song={activeSong} onClose={() => setActiveSong(null)} />
+        <PlayerBar key={activeSong.id} song={activeSong} onClose={() => setActiveSong(null)} />
       )}
     </>
   );

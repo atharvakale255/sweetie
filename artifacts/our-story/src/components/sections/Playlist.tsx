@@ -222,11 +222,11 @@ function PlayerBar({ song, onClose }: { song: Song; onClose: () => void }) {
       <div className="relative px-4 md:px-8 py-4">
         {/* Top row: thumbnail + song info + controls + close */}
         <div className="flex items-center gap-4 mb-3">
-          {/* YouTube player — visible small thumbnail so autoplay isn't blocked */}
-          <div className="flex-shrink-0 w-[120px] h-[68px] rounded-xl overflow-hidden relative">
-            <div ref={iframeContainerRef} className="w-full h-full" />
-            {/* Dark overlay so it doesn't look jarring */}
-            <div className="absolute inset-0 bg-black/20 rounded-xl pointer-events-none" />
+          {/* YouTube player — visible thumbnail; overlay blocks all mouse interaction */}
+          <div className="flex-shrink-0 w-[180px] h-[101px] rounded-xl overflow-hidden relative shadow-lg">
+            <div ref={iframeContainerRef} className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full" />
+            {/* Transparent overlay — blocks hover/click reaching the YouTube iframe */}
+            <div className="absolute inset-0 rounded-xl cursor-default" />
           </div>
         
           {/* Song info */}

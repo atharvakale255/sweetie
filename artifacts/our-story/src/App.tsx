@@ -1,6 +1,7 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { useEffect } from "react";
 import Home from "@/pages/Home";
+import { CustomCursor } from "@/components/CustomCursor";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function App() {
 
   return (
     <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+      <CustomCursor />
       <Router />
     </WouterRouter>
   );

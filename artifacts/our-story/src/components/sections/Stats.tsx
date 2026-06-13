@@ -4,12 +4,12 @@ import { Clock, Smile, MessageCircle, Moon, Phone, CalendarHeart } from "lucide-
 
 // CUSTOMIZE: Change these values to match your real stats
 const STATS = [
-  { id: "hours", label: "Hours Spent Talking", target: 847, icon: Clock },
-  { id: "laughs", label: "Times We Laughed", target: 1203, icon: Smile },
-  { id: "jokes", label: "Inside Jokes", target: 64, icon: MessageCircle },
-  { id: "late", label: "Times Up Too Late", target: 112, icon: Moon },
-  { id: "calls", label: "Voice Calls", target: 38, icon: Phone },
-  { id: "days", label: "Days Since We Met", target: 365, icon: CalendarHeart },
+  { id: "days",   label: "Days Since We Met",     target: 490,  icon: CalendarHeart },
+  { id: "hours",  label: "Hours Spent Talking",   target: 720,  icon: Clock },
+  { id: "late",   label: "Times Up Way Too Late", target: 200,  icon: Moon },
+  { id: "laughs", label: "Times We Laughed",      target: 1847, icon: Smile },
+  { id: "jokes",  label: "Inside Jokes",          target: 63,   icon: MessageCircle },
+  { id: "calls",  label: "Voice Calls",           target: 31,   icon: Phone },
 ];
 
 function AnimatedCounter({ target }: { target: number }) {
